@@ -1,0 +1,81 @@
+# Assignment No. 1
+# Program: Fibonacci Numbers and Step Count
+
+# -------------------- RECURSIVE VERSION --------------------
+
+steps_recursive = 0  # Global variable to count how many times the recursive function runs
+
+
+def fibonacci_recursive(n):
+    """Function to find Fibonacci number using recursion"""
+    global steps_recursive           # To modify the global counter
+    steps_recursive += 1             # Increase count every time function is called
+
+    # Base condition: If n is 0 or 1, just return n (end of recursion)
+    if n <= 1:
+        return n
+
+    # Recursive case: Function calls itself twice
+    # fibonacci_recursive(n-1) and fibonacci_recursive(n-2)
+    # This continues until base case is reached
+    return fibonacci_recursive(n - 1) + fibonacci_recursive(n - 2)
+
+
+# Taking input from user
+num = int(input("Enter a number for recursive Fibonacci: "))
+
+# Calling recursive function
+result_recursive = fibonacci_recursive(num)
+
+# Displaying result and total number of recursive calls
+print("\nFibonacci Using Recursive Function:")
+print(f"Fibonacci({num}) = {result_recursive}")
+print(f"Total steps (recursive calls): {steps_recursive}")
+
+
+# -------------------- NON-RECURSIVE (ITERATIVE) VERSION --------------------
+
+def fibonacci_iterative(n):
+    """Function to find Fibonacci number using iteration (loop)"""
+    steps = 0  # Counter for number of steps/iterations in loop
+
+    # If n is 0 or 1, directly return the value and count 1 step
+    if n <= 1:
+        steps += 1
+        return n, steps
+
+    # Start with first two Fibonacci numbers
+    a, b = 0, 1
+
+    # Loop from 2 to n to calculate Fibonacci iteratively
+    for _ in range(2, n + 1):
+        a, b = b, a + b   # Move forward in Fibonacci sequence
+        steps += 1        # Increase step count for each loop iteration
+
+    return b, steps        # Return final Fibonacci number and total steps
+
+
+# Taking input from user for iterative version
+num = int(input("\nEnter a number for non-recursive Fibonacci: "))
+
+# Calling iterative function
+result_iterative, steps_iterative = fibonacci_iterative(num)
+
+# Displaying result and total number of loop iterations
+print("\nFibonacci Using Non-Recursive Function:")
+print(f"Fibonacci({num}) = {result_iterative}")
+print(f"Total steps (iterations): {steps_iterative}")
+
+
+# -------------------- SAMPLE OUTPUT --------------------
+'''
+Enter a number for recursive Fibonacci: 5
+Fibonacci Using Recursive Function:
+Fibonacci(5) = 5
+Total steps (recursive calls): 15
+
+Enter a number for non-recursive Fibonacci: 6
+Fibonacci Using Non-Recursive Function:
+Fibonacci(6) = 8
+Total steps (iterations): 5
+'''

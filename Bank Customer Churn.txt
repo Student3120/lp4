@@ -1,0 +1,62 @@
+# Assignment - Customer Churn Prediction using Neural Network 
+
+# Step 1: Import Libraries
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Step 2: Load Dataset
+df = pd.read_csv("D:/Churn_Modelling.csv")
+print("Original Dataset Shape:", df.shape)
+print(df.head())
+
+# Step 3: Data Preprocessing
+# Drop unnecessary columns
+df = df.drop(['RowNumber', 'CustomerId', 'Surname'], axis=1)
+
+# Encode categorical columns
+le_geo = LabelEncoder()
+le_gender = LabelEncoder()
+df['Geography'] = le_geo.fit_transform(df['Geography'])
+df['Gender'] = le_gender.fit_transform(df['Gender'])
+
+# Separate features and target
+X = df.drop('Exited', axis=1)
+y = df['Exited']
+
+# Step 4: Feature Scaling
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 5: Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# Step 6: Train Neural Network (MLPClassifier)
+model = MLPClassifier(hidden_layer_sizes=(10, 10), activation='relu', max_iter=500, random_state=42)
+model.fit(X_train, y_train)
+
+# Step 7: Predictions and Evaluation
+y_pred = model.predict(X_test)
+
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+print("Accuracy:", accuracy_score(y_test, y_pred))
+
+# Step 8: Visualization - Confusion Matrix
+plt.figure(figsize=(6,4))
+sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='coolwarm')
+plt.title("Confusion Matrix - Customer Churn")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+# Step 9: Visualization - Feature Importance (based on coefficients)
+importance = abs(model.coefs_[0]).mean(axis=1)
+plt.figure(figsize=(10,5))
+sns.barplot(x=X.columns, y=importance)
+plt.xticks(rotation=45)
+plt.title("Feature Importance (Approximation)")
+plt.show()

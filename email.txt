@@ -1,0 +1,67 @@
+# Assignment - Email Spam Classification using KNN and SVM
+
+# Step 1: Import Libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, accuracy_score
+
+# Step 2: Load Dataset
+df = pd.read_csv("D:/emails.csv")  # make sure your file name and path are correct
+print("Original Dataset Shape:", df.shape)
+print(df.head())
+
+# Step 3: Data Preprocessing
+# Remove unnecessary column
+df = df.drop("Email No.", axis=1)
+
+# Check for missing values
+print("\nMissing Values:\n", df.isnull().sum())
+
+# Step 4: Split Features and Target
+X = df.drop("Prediction", axis=1)
+y = df["Prediction"]
+
+# Split data into train and test sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 5: K-Nearest Neighbors Model
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+y_pred_knn = knn.predict(X_test)
+
+print("\n--- K-Nearest Neighbors Classification Report ---")
+print(classification_report(y_test, y_pred_knn))
+print("KNN Accuracy:", accuracy_score(y_test, y_pred_knn))
+
+# Step 6: Support Vector Machine Model
+svm = SVC(kernel='linear')  # linear kernel for binary classification
+svm.fit(X_train, y_train)
+y_pred_svm = svm.predict(X_test)
+
+print("\n--- Support Vector Machine Classification Report ---")
+print(classification_report(y_test, y_pred_svm))
+print("SVM Accuracy:", accuracy_score(y_test, y_pred_svm))
+
+# Step 7: Visualization - Compare Model Accuracies
+import matplotlib.pyplot as plt
+
+# Store model names and accuracies
+models = ['KNN', 'SVM']
+accuracies = [
+    accuracy_score(y_test, y_pred_knn),
+    accuracy_score(y_test, y_pred_svm)
+]
+
+# Create bar plot
+plt.bar(models, accuracies, color=['skyblue', 'lightgreen'])
+plt.title("Model Accuracy Comparison")
+plt.ylabel("Accuracy")
+plt.ylim(0, 1)
+
+# Display accuracy values on bars
+for i, acc in enumerate(accuracies):
+    plt.text(i, acc + 0.01, f"{acc:.2f}", ha='center', fontsize=10)
+
+plt.show()

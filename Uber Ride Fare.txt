@@ -1,0 +1,129 @@
+# Assignment - Uber Ride Fare Prediction using Regression Models
+#pip install pandas numpy matplotlib seaborn scikit-learn haversine
+
+# ---------------- Step 1: Import Libraries ----------------
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_squared_error
+import math
+from haversine import haversine
+
+# ---------------- Step 2: Load and Preprocess Dataset ----------------
+df = pd.read_csv(r"D:/uber.csv")  # <-- Change path if needed
+print("Original shape:", df.shape)
+print(df.head())
+
+# Drop unnecessary columns
+df = df.drop(['Unnamed: 0', 'key'], axis=1)
+
+# Check data types and missing values
+print("\nDataset Info:")
+print(df.info())
+
+# ---------------- Step 3: Handle Missing Values ----------------
+# Fill missing numeric values with mean or median
+df['dropoff_latitude'] = df['dropoff_latitude'].fillna(df['dropoff_latitude'].mean())
+df['dropoff_longitude'] = df['dropoff_longitude'].fillna(df['dropoff_longitude'].median())
+
+print("\nMissing values after filling:\n", df.isnull().sum())
+
+
+# ---------------- Step 4: Identify and Treat Outliers ----------------
+def remove_outlier(df, col):
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    lower = Q1 - 1.5 * IQR
+    upper = Q3 + 1.5 * IQR
+    df[col] = np.clip(df[col], lower, upper)  # clip keeps values within range
+    return df
+
+num_cols = df.select_dtypes(include='number').columns
+for col in num_cols:
+    df = remove_outlier(df, col)
+
+print("\nOutliers treated successfully.")
+
+# ---------------- Step 5: Check Correlation ----------------
+# Exclude non-numeric columns (pickup_datetime)
+numeric_df = df.select_dtypes(include=[np.number])
+
+plt.figure(figsize=(10,6))
+sns.heatmap(numeric_df.corr(), annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap")
+plt.show() 
+
+
+
+# Filter invalid latitude and longitude values
+df = df[
+    (df['pickup_longitude'].between(-180, 180)) &
+    (df['dropoff_longitude'].between(-180, 180)) &
+    (df['pickup_latitude'].between(-90, 90)) &
+    (df['dropoff_latitude'].between(-90, 90))
+]
+
+print("\nAfter removing invalid coordinates:", df.shape)
+
+# ---------------- Step 6: Feature Engineering ----------------
+# Calculate distance travelled using Haversine formula
+def calculate_distance(lat1, lon1, lat2, lon2):
+    loc1 = (lat1, lon1)
+    loc2 = (lat2, lon2)
+    return haversine(loc1, loc2)
+
+df['distance_km'] = df.apply(lambda row: calculate_distance(
+    row['pickup_latitude'],
+    row['pickup_longitude'],
+    row['dropoff_latitude'],
+    row['dropoff_longitude']), axis=1)
+
+# Remove rows where distance is zero or too high (noise)
+df = df[(df['distance_km'] > 0) & (df['distance_km'] < 130)]
+print("\nNew feature 'distance_km' added successfully.")
+print(df[['fare_amount', 'passenger_count', 'distance_km']].head())
+
+# ---------------- Step 7: Prepare Data for Modeling ----------------
+X = df[['passenger_count', 'distance_km']]
+y = df['fare_amount']
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
+
+# ---------------- Step 8: Build Models ----------------
+# Linear Regression
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+y_pred_lr = lr.predict(X_test)
+
+# Random Forest Regression
+rf = RandomForestRegressor(random_state=42)
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+
+# ---------------- Step 9: Evaluate Models ----------------
+def evaluate_model(name, y_true, y_pred):
+    r2 = r2_score(y_true, y_pred)
+    rmse = math.sqrt(mean_squared_error(y_true, y_pred))
+    print(f"{name} -> R2 Score: {r2:.4f}, RMSE: {rmse:.4f}")
+
+print("\nModel Evaluation Results:")
+evaluate_model("Linear Regression", y_test, y_pred_lr)
+evaluate_model("Random Forest Regression", y_test, y_pred_rf)
+
+# ---------------- Step 10: Visualization ----------------
+plt.figure(figsize=(10,5))
+plt.scatter(y_test, y_pred_lr, color='blue', label='Linear Regression', alpha=0.6)
+plt.scatter(y_test, y_pred_rf, color='green', label='Random Forest', alpha=0.5)
+plt.xlabel("Actual Fare")
+plt.ylabel("Predicted Fare")
+plt.legend()
+plt.title("Model Comparison: Actual vs Predicted Fares")
+plt.show()
+
+print("\n✅ All 5 steps from the question are successfully implemented!")

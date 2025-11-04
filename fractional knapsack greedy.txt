@@ -1,0 +1,67 @@
+# Assignment No. 3
+# Fractional Knapsack Problem using Greedy Method
+
+def fractional_knapsack(weights, values, capacity):
+    # Step 1: Create a list of items with their value-to-weight ratios
+    items = []
+    for i in range(len(weights)):
+        ratio = values[i] / weights[i]              # Calculate value/weight ratio for each item
+        items.append((ratio, weights[i], values[i])) # Store as a tuple (ratio, weight, value)
+
+    # Step 2: Sort items by ratio in descending order (highest first)
+    # Because we want to pick items that give the most value per unit of weight
+    items.sort(reverse=True)
+
+    total_value = 0.0               # To store total maximum value we can carry
+    remaining_capacity = capacity   # Remaining weight capacity of the bag
+
+    print("\nSelected items and fractions:")
+    # Step 3: Iterate over all sorted items
+    for ratio, weight, value in items:
+        if remaining_capacity == 0:     # If bag is full, stop
+            break
+
+        if weight <= remaining_capacity:
+            # If the whole item fits in the bag, take it fully
+            remaining_capacity -= weight      # Decrease remaining capacity
+            total_value += value              # Add full value of item
+            print(f"Take full item: weight={weight}, value={value}")
+        else:
+            # If item cannot fit completely, take only the fraction that fits
+            fraction = remaining_capacity / weight     # Fraction of item we can take
+            total_value += value * fraction            # Add fraction of value
+            print(f"Take {fraction*100:.2f}% of item: weight used={remaining_capacity}, value added={value*fraction:.2f}")
+            remaining_capacity = 0                    # Bag is now full
+
+    # Step 4: Return the total value of items taken
+    return total_value
+
+
+# -------- Main Program --------
+# Step 5: Take user input for weights, values, and bag capacity
+weights = list(map(int, input("Enter item weights (space-separated): ").split()))
+values = list(map(int, input("Enter item values (space-separated): ").split()))
+capacity = int(input("Enter knapsack capacity: "))
+
+# Step 6: Call the function and store result
+max_val = fractional_knapsack(weights, values, capacity)
+
+# Step 7: Print final maximum value that can be obtained
+print(f"\nMaximum value in knapsack = {max_val:.2f}")
+
+
+
+# -------- Example Output --------
+'''
+Enter item weights (space-separated): 3 1 1 4 
+Enter item values (space-separated): 2 4 3 1
+Enter knapsack capacity: 30
+
+Selected items and fractions:
+Take full item: weight=1, value=4
+Take full item: weight=1, value=3
+Take full item: weight=3, value=2
+Take full item: weight=4, value=1
+
+Maximum value in knapsack = 10.00
+'''
